@@ -1,0 +1,81 @@
+%{
+#include <stdio.h>
+extern FILE *yyin;
+%}
+
+%%
+
+"while"                 { printf("WHILE Loop Keyword : %s\n", yytext); }
+"True"                  { printf("Boolean Constant (True) : %s\n", yytext); }
+"False"                 { printf("Boolean Constant (False) : %s\n", yytext); }
+"break"                 { printf("Loop Control Break : %s\n", yytext); }
+"continue"              { printf("Loop Control Continue : %s\n", yytext); }
+"pass"                  { printf("Null Statement Pass : %s\n", yytext); }
+
+":"                     { printf("Block Scope Colon : %s\n", yytext); }
+
+"=="                    { printf("Equal To Operator : %s\n", yytext); }
+"!="                    { printf("Not Equal To Operator : %s\n", yytext); }
+">="                    { printf("Greater Than or Equal Operator : %s\n", yytext); }
+"<="                    { printf("Less Than or Equal Operator : %s\n", yytext); }
+">"                     { printf("Greater Than Operator : %s\n", yytext); }
+"<"                     { printf("Less Than Operator : %s\n", yytext); }
+
+"and"                   { printf("Logical AND Operator : %s\n", yytext); }
+"or"                    { printf("Logical OR Operator : %s\n", yytext); }
+"not"                   { printf("Logical NOT Operator : %s\n", yytext); }
+
+"<<="                   { printf("Left Shift Assignment Operator : %s\n", yytext); }
+">>="                   { printf("Right Shift Assignment Operator : %s\n", yytext); }
+"&="                    { printf("Bitwise AND Assignment Operator : %s\n", yytext); }
+"|="                    { printf("Bitwise OR Assignment Operator : %s\n", yytext); }
+"^="                    { printf("Bitwise XOR Assignment Operator : %s\n", yytext); }
+"+="                    { printf("In-place Add Assignment : %s\n", yytext); }
+"-="                    { printf("In-place Subtract Assignment : %s\n", yytext); }
+"="                     { printf("Assignment Operator : %s\n", yytext); }
+
+"<<"                    { printf("Left Shift Operator : %s\n", yytext); }
+">>"                    { printf("Right Shift Operator : %s\n", yytext); }
+"&"                     { printf("Bitwise AND Operator : %s\n", yytext); }
+"|"                     { printf("Bitwise OR Operator : %s\n", yytext); }
+"^"                     { printf("Bitwise XOR Operator : %s\n", yytext); }
+"~"                     { printf("Bitwise NOT Operator : %s\n", yytext); }
+
+"("                     { printf("Left Parenthesis : %s\n", yytext); }
+")"                     { printf("Right Parenthesis : %s\n", yytext); }
+
+[0-9]+"."[0-9]+         { printf("Float Literal : %s\n", yytext); }
+[0-9]+                  { printf("Integer Literal : %s\n", yytext); }
+
+[a-zA-Z_][a-zA-Z0-9_]*  { printf("Identifier (Variable/Function) : %s\n", yytext); }
+
+[ ]{4}                  { printf("Indentation Block (4 Spaces)\n"); }
+[ \t]                   { /* Ignore single spaces and tabs outside indentation patterns */ }
+"\n"                    { printf("New Line / Statement Terminator\n"); }
+
+.                       { printf("Unknown Symbol Detected : %s\n", yytext); }
+
+%%
+
+int main()
+{
+    yyin = fopen("sample.txt", "r");
+
+    if (yyin == NULL)
+    {
+        printf("Error: Cannot open input.txt\n");
+        return 1;
+    }
+
+    printf("PYTHON WHILE LOOP LEXICAL ANALYSIS OUTPUT\n\n");
+
+    yylex();
+
+    fclose(yyin);
+    return 0;
+}
+
+int yywrap()
+{
+    return 1;
+}
