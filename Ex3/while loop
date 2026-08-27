@@ -41,6 +41,17 @@ extern FILE *yyin;
 "^"                     { printf("Bitwise XOR Operator : %s\n", yytext); }
 "~"                     { printf("Bitwise NOT Operator : %s\n", yytext); }
 
+"++"[a-zA-Z_][a-zA-Z0-9_]* { printf("PREFIX Increment Operator : %s\n", yytext); }
+"--"[a-zA-Z_][a-zA-Z0-9_]* { printf("PREFIX Decrement Operator : %s\n", yytext); }
+[a-zA-Z_][a-zA-Z0-9_]*"++" { printf("POSTFIX Increment Operator : %s\n", yytext); }
+[a-zA-Z_][a-zA-Z0-9_]*"--" { printf("POSTFIX Decrement Operator : %s\n", yytext); }
+
+"+"                     { printf("Addition Operator : %s\n", yytext); }
+"-"                     { printf("Subtraction Operator : %s\n", yytext); }
+"*"                     { printf("Multiplication Operator : %s\n", yytext); }
+"/"                     { printf("Division Operator : %s\n", yytext); }
+"%"                     { printf("Modulus Operator : %s\n", yytext); }
+
 "("                     { printf("Left Parenthesis : %s\n", yytext); }
 ")"                     { printf("Right Parenthesis : %s\n", yytext); }
 
@@ -50,7 +61,7 @@ extern FILE *yyin;
 [a-zA-Z_][a-zA-Z0-9_]*  { printf("Identifier (Variable/Function) : %s\n", yytext); }
 
 [ ]{4}                  { printf("Indentation Block (4 Spaces)\n"); }
-[ \t]                   { /* Ignore single spaces and tabs outside indentation patterns */ }
+[ \t]                   { /* Ignore trailing spacing elements */ }
 "\n"                    { printf("New Line / Statement Terminator\n"); }
 
 .                       { printf("Unknown Symbol Detected : %s\n", yytext); }
@@ -59,7 +70,7 @@ extern FILE *yyin;
 
 int main()
 {
-    yyin = fopen("sample.txt", "r");
+    yyin = fopen("input.txt", "r");
 
     if (yyin == NULL)
     {
@@ -67,7 +78,7 @@ int main()
         return 1;
     }
 
-    printf("PYTHON WHILE LOOP LEXICAL ANALYSIS OUTPUT\n\n");
+    printf("PYTHON SYNTAX ANALYZER WITH UNARY OVERRIDES\n\n");
 
     yylex();
 
