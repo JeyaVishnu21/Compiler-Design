@@ -1,0 +1,295 @@
+Script started on Thursday 15 October 2026 03:23:13 PM IST
+[24bcs042@mepcolinux ex6]$cat quad.l
+%{
+#include "y.tab.h"
+#include <string.h>
+#include <stdlib.h>
+%}
+
+%%
+
+"for"                    { return FOR; }
+"++"                     { return INCR; }
+"&&"                     { return AND; }
+"<="                     { return LE; }
+">="                     { return GE; }
+"<"                      { return LT; }
+">"                      { return GT; }
+"+"                      { return PLUS; }
+"-"                      { return MINUS; }
+"*"                      { return MUL; }
+"/"                      { return DIV; }
+"="                      { return ASSIGN; }
+";"                      { return SEMI; }
+","                      { return COMMA; }
+"("                      { return LPAREN; }
+")"                      { return RPAREN; }
+"{"                      { return LBRACE; }
+"}"                      { return RBRACE; }
+[0-9]+                   { yylval.str = strdup(yytext); return NUM; }
+[a-zA-Z_][a-zA-Z0-9_]*  { yylval.str = strdup(yytext); return ID; }
+[ \t\r\n]+               { /* Ignore whitespace */ }
+.                        { return yytext[0]; }
+
+%%
+
+int yywrap(void) {
+    return 1;
+}
+
+[24bcs042@mepcolinux ex6]$cat quad.y
+%{
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+#define MAX_INIT 20
+
+int t = 1;
+
+void quad(char *label, char *op, char *arg1, char *arg2, char *result) {
+    printf("%-8s %-12s %-12s %-12s %-12s\n",
+           label, op, arg1, arg2, result);
+}
+
+char init_l[MAX_INIT][20];
+char init_a[MAX_INIT][20];
+int init_count = 0;
+
+char cond_a[2][20], cond_b[2][20], cond_op[2][10];
+int condition_count = 0;
+
+char inc_l[20];
+
+extern FILE *yyin;
+extern int yylex(void);
+int yyerror(char *s);
+%}
+
+%union {
+    char *str;
+}
+
+%token <str> ID NUM
+%token FOR LE GE LT GT PLUS MINUS MUL DIV ASSIGN INCR AND
+%token SEMI COMMA LPAREN RPAREN LBRACE RBRACE
+
+%type <str> operand
+
+%%
+
+program
+    : for_stmt
+    ;
+
+for_stmt
+    : FOR LPAREN init_list SEMI condition SEMI inc RPAREN LBRACE
+      {
+          printf("%-8s %-12s %-12s %-12s %-12s\n",
+                 "Label", "Op", "Arg1", "Arg2", "Result");
+
+          /* Output each initialization, e.g. i=0 and j=1 */
+          for (int k = 0; k < init_count; k++) {
+              quad("-", "=", init_a[k], "-", init_l[k]);
+          }
+
+          /* Start of the condition check */
+          quad("L2", "LABEL", "-", "-", "-");
+
+          char temp[10];
+
+          /* Check the first comparison */
+          sprintf(temp, "T%d", t++);
+          quad("-", cond_op[0], cond_a[0], cond_b[0], temp);
+          quad("-", "IF_FALSE", temp, "-", "GOTO L1");
+
+          /* Check the second comparison, if there is one */
+          if (condition_count == 2) {
+              sprintf(temp, "T%d", t++);
+              quad("-", cond_op[1], cond_a[1], cond_b[1], temp);
+              quad("-", "IF_FALSE", temp, "-", "GOTO L1");
+          }
+      }
+      stmt_list RBRACE
+      {
+          /* Increment: i++ means i = i + 1 */
+          char temp[10];
+          sprintf(temp, "T%d", t++);
+          quad("-", "+", inc_l, "1", temp);
+          quad("-", "=", temp, "-", inc_l);
+
+          /* Go back to check the condition */
+          quad("-", "GOTO", "-", "-", "L2");
+
+          /* False condition exits the loop here */
+          quad("L1", "LABEL", "-", "-", "-");
+      }
+    ;
+
+init_list
+    : init_item
+    | init_list COMMA init_item
+    ;
+
+init_item
+    : ID ASSIGN operand
+      {
+          if (init_count >= MAX_INIT) {
+              yyerror("too many initialization assignments");
+              YYABORT;
+          }
+
+          strcpy(init_l[init_count], $1);
+          strcpy(init_a[init_count], $3);
+          init_count++;
+      }
+    ;
+
+condition
+    : comparison
+      {
+          condition_count = 1;
+      }
+    | comparison AND comparison
+      {
+          condition_count = 2;
+      }
+    ;
+
+comparison
+    : operand LT operand
+      {
+          int index = condition_count;
+          strcpy(cond_op[index], "<");
+          strcpy(cond_a[index], $1);
+          strcpy(cond_b[index], $3);
+          condition_count++;
+      }
+    | operand GT operand
+      {
+          int index = condition_count;
+          strcpy(cond_op[index], ">");
+          strcpy(cond_a[index], $1);
+          strcpy(cond_b[index], $3);
+          condition_count++;
+      }
+    | operand LE operand
+      {
+          int index = condition_count;
+          strcpy(cond_op[index], "<=");
+          strcpy(cond_a[index], $1);
+          strcpy(cond_b[index], $3);
+          condition_count++;
+      }
+    | operand GE operand
+      {
+          int index = condition_count;
+          strcpy(cond_op[index], ">=");
+          strcpy(cond_a[index], $1);
+          strcpy(cond_b[index], $3);
+          condition_count++;
+      }
+    ;
+
+inc
+    : ID INCR
+      {
+          strcpy(inc_l, $1);
+      }
+    ;
+
+stmt_list
+    : stmt_list stmt
+    | stmt
+    ;
+
+stmt
+    : ID ASSIGN operand PLUS operand SEMI
+      {
+          char temp[10];
+          sprintf(temp, "T%d", t++);
+          quad("-", "+", $3, $5, temp);
+          quad("-", "=", temp, "-", $1);
+      }
+    | ID ASSIGN operand MINUS operand SEMI
+      {
+          char temp[10];
+          sprintf(temp, "T%d", t++);
+          quad("-", "-", $3, $5, temp);
+          quad("-", "=", temp, "-", $1);
+      }
+    | ID ASSIGN operand MUL operand SEMI
+      {
+          char temp[10];
+          sprintf(temp, "T%d", t++);
+          quad("-", "*", $3, $5, temp);
+          quad("-", "=", temp, "-", $1);
+      }
+    | ID ASSIGN operand DIV operand SEMI
+      {
+          char temp[10];
+          sprintf(temp, "T%d", t++);
+          quad("-", "/", $3, $5, temp);
+          quad("-", "=", temp, "-", $1);
+      }
+    | ID ASSIGN operand SEMI
+      {
+          quad("-", "=", $3, "-", $1);
+      }
+    ;
+
+operand
+    : ID  { $$ = $1; }
+    | NUM { $$ = $1; }
+    ;
+
+%%
+
+int main(void) {
+    FILE *fp = fopen("input.txt", "r");
+
+    if (fp == NULL) {
+        printf("File not found\n");
+        return 1;
+    }
+
+    yyin = fp;
+    int rc = yyparse();
+    fclose(fp);
+    return rc;
+}
+
+int yyerror(char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+    return 0;
+}
+
+[24bcs042@mepcolinux ex6]$cat input.txt
+for(i=0,j=1;i<=5 && j>6;i++){
+  a=b+c;
+  x=a*d;
+  e=x/z;
+  }
+[24bcs042@mepcolinux ex6]$./qua
+Label    Op           Arg1         Arg2         Result      
+-        =            0            -            i           
+-        =            1            -            j           
+L2       LABEL        -            -            -           
+-        <=           i            5            T1          
+-        IF_FALSE     T1           -            GOTO L1     
+-        >            j            6            T2          
+-        IF_FALSE     T2           -            GOTO L1     
+-        +            b            c            T3          
+-        =            T3           -            a           
+-        *            a            d            T4          
+-        =            T4           -            x           
+-        /            x            z            T5          
+-        =            T5           -            e           
+-        +            i            1            T6          
+-        =            T6           -            i           
+-        GOTO         -            -            L2          
+L1       LABEL        -            -            -           
+[24bcs042@mepcolinux ex6]$exit
+exit
+
+Script done on Thursday 15 October 2026 03:23:41 PM IST
