@@ -1,101 +1,273 @@
+cript started on Thu Oct  1 11:45:58 2026
+[24bcs042@mepcolinux ex3]$cat while.l
 %{
+#include "y.tab.h"
 #include <stdio.h>
-extern FILE *yyin;
 %}
 
-%%
-
-"while"                 { printf("WHILE Loop Keyword : %s\n", yytext); }
-"print"                 { printf("PRINT Function Keyword : %s\n", yytext); }
-"True"                  { printf("Boolean Constant (True) : %s\n", yytext); }
-"False"                 { printf("Boolean Constant (False) : %s\n", yytext); }
-"break"                 { printf("Loop Control Break : %s\n", yytext); }
-"continue"              { printf("Loop Control Continue : %s\n", yytext); }
-"pass"                  { printf("Null Statement Pass : %s\n", yytext); }
-
-":"                     { printf("Block Scope Colon : %s\n", yytext); }
-
-"=="                    { printf("Equal To Operator : %s\n", yytext); }
-"!="                    { printf("Not Equal To Operator : %s\n", yytext); }
-">="                    { printf("Greater Than or Equal Operator : %s\n", yytext); }
-"<="                    { printf("Less Than or Equal Operator : %s\n", yytext); }
-">"                     { printf("Greater Than Operator : %s\n", yytext); }
-"<"                     { printf("Less Than Operator : %s\n", yytext); }
-
-"and"                   { printf("Logical AND Operator : %s\n", yytext); }
-"or"                    { printf("Logical OR Operator : %s\n", yytext); }
-"not"                   { printf("Logical NOT Operator : %s\n", yytext); }
-
-"<<="                   { printf("Left Shift Assignment Operator : %s\n", yytext); }
-">>="                   { printf("Right Shift Assignment Operator : %s\n", yytext); }
-"&="                    { printf("Bitwise AND Assignment Operator : %s\n", yytext); }
-"|="                    { printf("Bitwise OR Assignment Operator : %s\n", yytext); }
-"^="                    { printf("Bitwise XOR Assignment Operator : %s\n", yytext); }
-"+="                    { printf("In-place Add Assignment : %s\n", yytext); }
-"-="                    { printf("In-place Subtract Assignment : %s\n", yytext); }
-"="                     { printf("Assignment Operator : %s\n", yytext); }
-
-"<<"                    { printf("Left Shift Operator : %s\n", yytext); }
-">>"                    { printf("Right Shift Operator : %s\n", yytext); }
-"&"                     { printf("Bitwise AND Operator : %s\n", yytext); }
-"|"                     { printf("Bitwise OR Operator : %s\n", yytext); }
-"^"                     { printf("Bitwise XOR Operator : %s\n", yytext); }
-"~"                     { printf("Bitwise NOT Operator : %s\n", yytext); }
-
-"++"[a-zA-Z_][a-zA-Z0-9_]* { printf("PREFIX Increment Operator : %s\n", yytext); }
-"--"[a-zA-Z_][a-zA-Z0-9_]* { printf("PREFIX Decrement Operator : %s\n", yytext); }
-[a-zA-Z_][a-zA-Z0-9_]*"++" { printf("POSTFIX Increment Operator : %s\n", yytext); }
-[a-zA-Z_][a-zA-Z0-9_]*"--" { printf("POSTFIX Decrement Operator : %s\n", yytext); }
-
-
-"-"[0-9]+"."[0-9]+       { printf("UNARY Minus with Float Literal : %s\n", yytext); }
-"-"[0-9]+                { printf("UNARY Minus with Integer Literal : %s\n", yytext); }
-"-"[a-zA-Z_][a-zA-Z0-9_]* { printf("UNARY Minus with Identifier : %s\n", yytext); }
-
-"+"                     { printf("Addition Operator : %s\n", yytext); }
-"-"                     { printf("Subtraction Operator : %s\n", yytext); }
-"*"                     { printf("Multiplication Operator : %s\n", yytext); }
-"/"                     { printf("Division Operator : %s\n", yytext); }
-"%"                     { printf("Modulus Operator : %s\n", yytext); }
-
-"("                     { printf("Left Parenthesis : %s\n", yytext); }
-")"                     { printf("Right Parenthesis : %s\n", yytext); }
-
-\"([^\\\"]|\\.)*\"      { printf("String Literal (Double Quotes) : %s\n", yytext); }
-'([^\\']|\\.)*'         { printf("String Literal (Single Quotes) : %s\n", yytext); }
-
-[0-9]+"."[0-9]+         { printf("Float Literal : %s\n", yytext); }
-[0-9]+                  { printf("Integer Literal : %s\n", yytext); }
-
-[a-zA-Z_][a-zA-Z0-9_]*  { printf("Identifier (Variable/Function) : %s\n", yytext); }
-
-[ ]{4}                  { printf("Indentation Block (4 Spaces)\n"); }
-[ \t]                   { /* Ignore single space and tabs outside pattern blocks */ }
-"\n"                    { printf("New Line / Statement Terminator\n"); }
-
-.                       { printf("Unknown Symbol Detected : %s\n", yytext); }
+%option yylineno
 
 %%
 
-int main()
-{
+"while"                 { return WHILE; }
+"print"                 { return PRINT; }
+"True"                  { return TRUE; }
+"False"                 { return FALSE; }
+"break"                 { return BREAK; }
+"continue"              { return CONTINUE; }
+"pass"                  { return PASS; }
+
+":"                     { return COLON; }
+";"                     { return SEMICOLON; }
+
+"=="                    { return EQUAL; }
+"!="                    { return NOT_EQUAL; }
+">="                    { return GE; }
+"<="                    { return LE; }
+">"                     { return GT; }
+"<"                     { return LT; }
+
+"and"                   { return AND; }
+"or"                    { return OR; }
+"not"                   { return NOT; }
+
+"<<="                   { return SHL_ASSIGN; }
+">>="                   { return SHR_ASSIGN; }
+"&="                    { return AND_ASSIGN; }
+"|="                    { return OR_ASSIGN; }
+"^="                    { return XOR_ASSIGN; }
+"+="                    { return ADD_ASSIGN; }
+"-="                    { return SUB_ASSIGN; }
+"="                     { return ASSIGN; }
+
+"<<"                    { return SHL; }
+">>"                    { return SHR; }
+"&"                     { return BIT_AND; }
+"|"                     { return BIT_OR; }
+"^"                     { return BIT_XOR; }
+"~"                     { return BIT_NOT; }
+
+"++"[a-zA-Z_][a-zA-Z0-9_]* { return INC_PREFIX; }
+"--"[a-zA-Z_][a-zA-Z0-9_]* { return DEC_PREFIX; }
+[a-zA-Z_][a-zA-Z0-9_]*"++" { return INC_POSTFIX; }
+[a-zA-Z_][a-zA-Z0-9_]*"--" { return DEC_POSTFIX; }
+
+"+"                     { return PLUS; }
+"-"                     { return MINUS; }
+"*"                     { return MULTIPLY; }
+"/"                     { return DIVIDE; }
+"%"                     { return MODULUS; }
+
+"("                     { return LPAREN; }
+")"                     { return RPAREN; }
+
+\"([^\\\"]|\\.)*\"      { return STRING; }
+'([^\\']|\\.)*'         { return STRING; }
+
+[0-9]+"."[0-9]+         { return FLOAT; }
+[0-9]+                  { return INTEGER; }
+
+[a-zA-Z_][a-zA-Z0-9_]*  { return IDENTIFIER; }
+
+[ \t]                   { /* Ignore white spaces */ }
+"\n"                    { return NEWLINE; }
+
+.                       { return UNKNOWN; }
+
+%%
+
+int yywrap() {
+    return 1;
+}
+
+[24bcs042@mepcolinux ex3]$cat while.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+
+extern int yylex();
+extern int yylineno;
+void yyerror(const char *s);
+%}
+
+/* Tokens received from the Lexer */
+%token WHILE PRINT TRUE FALSE BREAK CONTINUE PASS
+%token IDENTIFIER INTEGER FLOAT STRING
+%token COLON EQUAL NOT_EQUAL GE LE GT LT
+%token AND OR NOT
+%token ASSIGN ADD_ASSIGN SUB_ASSIGN SHL_ASSIGN SHR_ASSIGN AND_ASSIGN OR_ASSIGN XOR_ASSIGN
+%token SHL SHR BIT_AND BIT_OR BIT_XOR BIT_NOT
+%token PLUS MINUS MULTIPLY DIVIDE MODULUS
+%token LPAREN RPAREN SEMICOLON
+%token INC_PREFIX DEC_PREFIX INC_POSTFIX DEC_POSTFIX
+%token NEWLINE UNKNOWN
+
+/* Operator Precedence and Associativity */
+%left OR
+%left AND
+%right NOT
+%left BIT_OR
+%left BIT_XOR
+%left BIT_AND
+%left EQUAL NOT_EQUAL GT LT GE LE
+%left SHL SHR
+%left PLUS MINUS
+%left MULTIPLY DIVIDE MODULUS
+%right BIT_NOT UNARY_MINUS INC_PREFIX DEC_PREFIX
+%left INC_POSTFIX DEC_POSTFIX
+
+%%
+
+/* Grammar Rules */
+
+program:
+    statements
+    ;
+
+statements:
+    statements statement
+    | /* empty */
+    ;
+
+statement:
+    assignment NEWLINE       { printf("Parsed: Assignment Statement\n"); }
+    | while_loop NEWLINE     { printf("Parsed: While Loop Structure\n"); }
+    | expression NEWLINE     { printf("Parsed: Expression Statement\n"); }
+    | command NEWLINE        { printf("Parsed: Standalone Command\n"); }
+    | NEWLINE                { /* Ignore empty lines */ }
+    ;
+
+while_loop:
+    WHILE expression COLON block { printf("Valid Python While Loop Syntax Detected!\n"); }
+    ;
+
+block:
+    statement_list
+    ;
+
+/* For handling single-line compound statements separated by semicolons */
+statement_list:
+    inline_statement
+    | statement_list SEMICOLON inline_statement
+    ;
+
+inline_statement:
+    assignment
+    | command
+    | expression
+    ;
+
+assignment:
+    IDENTIFIER ASSIGN expression
+    | IDENTIFIER ADD_ASSIGN expression
+    | IDENTIFIER SUB_ASSIGN expression
+    | IDENTIFIER SHL_ASSIGN expression
+    | IDENTIFIER SHR_ASSIGN expression
+    | IDENTIFIER AND_ASSIGN expression
+    | IDENTIFIER OR_ASSIGN expression
+    | IDENTIFIER XOR_ASSIGN expression
+    ;
+
+command:
+    PRINT LPAREN expression RPAREN { printf("Parsed: Print Function Call\n"); }
+    | BREAK                        { printf("Parsed: Loop Control Break\n"); }
+    | CONTINUE                     { printf("Parsed: Loop Control Continue\n"); }
+    | PASS                         { printf("Parsed: Null Statement Pass\n"); }
+    ;
+
+expression:
+    /* Primary Literals & Identifiers */
+    IDENTIFIER
+    | INTEGER
+    | FLOAT
+    | STRING
+    | TRUE
+    | FALSE
+    
+    /* Parentheses */
+    | LPAREN expression RPAREN
+    
+    /* Binary Arithmetic Operators */
+    | expression PLUS expression
+    | expression MINUS expression
+    | expression MULTIPLY expression
+    | expression DIVIDE expression
+    | expression MODULUS expression
+    
+    /* Relational Operators */
+    | expression EQUAL expression
+    | expression NOT_EQUAL expression
+    | expression GT expression
+    | expression LT expression
+    | expression GE expression
+    | expression LE expression
+    
+    /* Logical Operators */
+    | expression AND expression
+    | expression OR expression
+    | NOT expression
+    
+    /* Bitwise Operators */
+    | expression SHL expression
+    | expression SHR expression
+    | expression BIT_AND expression
+    | expression BIT_OR expression
+    | expression BIT_XOR expression
+    
+    /* Unary Operators */
+    | BIT_NOT expression
+    | MINUS expression %prec UNARY_MINUS { printf("Parsed Unary Minus Operation\n"); }
+    | INC_PREFIX
+    | DEC_PREFIX
+    | INC_POSTFIX
+    | DEC_POSTFIX
+    ;
+
+%%
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Syntax Error: %s at line %d\n", s, yylineno);
+}
+
+int main() {
+    extern FILE *yyin;
     yyin = fopen("sample.txt", "r");
-
-    if (yyin == NULL)
-    {
+    if (!yyin) {
         printf("Error: Cannot open sample.txt\n");
         return 1;
     }
 
-    printf("PYTHON SYNTAX ANALYZER WITH PRINT AND UNARY SUPPORT\n\n");
-
-    yylex();
-
+    printf("--- YACC PYTHON SYNTAX ANALYZER PARSING START ---\n\n");
+    if (yyparse() == 0) {
+        printf("\nSuccessfully Parsed Everything! Syntax is Correct.\n");
+    } else {
+        printf("\nParsing Failed due to Syntax Errors.\n");
+    }
+    
     fclose(yyin);
     return 0;
 }
 
-int yywrap()
-{
-    return 1;
-}
+[24bcs042@mepcolinux ex3]$cat sample.txt
+a = 12
+b = 5
+while (a == b or b != 3 and not False) or ((a < b) or (a > b) or (a <= -5) or (a >= 2)): print("Looping"); a += (b - 2) * 4 / 2 % 3 << 1 >> 1 & b | a ^ 1 + ~-b; ++a; a++; break
+
+
+[24bcs042@mepcolinux ex3]$./while
+--- YACC PYTHON SYNTAX ANALYZER PARSING START ---
+
+Parsed: Assignment Statement
+Parsed: Assignment Statement
+Parsed Unary Minus Operation
+Parsed: Print Function Call
+Parsed Unary Minus Operation
+Parsed: Loop Control Break
+Valid Python While Loop Syntax Detected!
+Parsed: While Loop Structure
+
+Successfully Parsed Everything! Syntax is Correct.
+[24bcs042@mepcolinux ex3]$exit
+exit
+
+Script done on Thu Oct  1 11:47:19 2026
