@@ -1,0 +1,172 @@
+[24bcs042@mepcolinux ex5]$cat calc.l
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include "calc.tab.h"
+%}
+
+%option noyywrap
+
+%%
+
+[ \t]+              ; /* ignore whitespace */
+
+[0-9]+              { yylval.ival = atoi(yytext); return INT; }
+
+"quit"|"exit"       { return QUIT; }
+
+"+"                 { return PLUS; }
+"-"                 { return MINUS; }
+"*"                 { return MUL; }
+"/"                 { return DIV; }
+"^"                 { return POW; }
+
+"("                 { return LPAREN; }
+")"                 { return RPAREN; }
+
+\n                  { return NEWLINE; }
+
+.                   { return yytext[0]; }
+
+%%
+[24bcs042@mepcolinux ex5]$cat calc.y
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+#include <math.h>
+int yylex(void);
+void yyerror(const char *s);
+#define MAX_INTS 1000
+int  seen_ints[MAX_INTS];
+int  seen_int_count = 0;
+bool seen_op[256] = { false };
+void reset_parsed(void) {
+    seen_int_count = 0;
+    memset(seen_op, 0, sizeof(seen_op));
+}
+void record_int(int val) {
+    for (int i = 0; i < seen_int_count; i++) {
+        if (seen_ints[i] == val)
+            return;
+    }
+    if (seen_int_count < MAX_INTS) {
+        seen_ints[seen_int_count++] = val;
+        printf("Parsed integer: %d\n", val);
+    }
+}
+void record_op(char op) {
+    unsigned char u = (unsigned char)op;
+    if (!seen_op[u]) {
+        seen_op[u] = true;
+        printf("Parsed operator: %c\n", op);
+    }
+}
+%}
+%union {
+    int    ival;
+    double dval;
+}
+%token <ival> INT
+%token PLUS MINUS MUL DIV POW
+%token LPAREN RPAREN
+%token NEWLINE QUIT
+%type <dval> EXP
+%left  PLUS MINUS
+%left  MUL DIV
+%right POW
+%right UMINU
+%%
+
+input:
+
+    | input line
+    ;
+
+line:
+      NEWLINE
+        { printf("> "); }
+    | { reset_parsed(); } EXP NEWLINE
+        {
+            printf("Result: %.6f\n", $2);
+            printf("> ");
+        }
+    | QUIT NEWLINE
+        { printf("Exiting\n"); exit(0); }
+    | error NEWLINE
+        { yyerrok; printf("> "); }
+    ;
+
+EXP:
+      INT
+        { record_int($1); $$ = (double)$1; }
+
+    | EXP PLUS EXP
+        { record_op('+'); $$ = $1 + $3; }
+
+    | EXP MINUS EXP
+        { record_op('-'); $$ = $1 - $3; }
+
+    | EXP MUL EXP
+        { record_op('*'); $$ = $1 * $3; }
+
+    | EXP DIV EXP
+        {
+            record_op('/');
+            if ($3 == 0.0) {
+                yyerror("Division by zero");
+                $$ = 0.0;
+            } else {
+                $$ = $1 / $3;
+            }
+        }
+
+    | EXP POW EXP
+        { record_op('^'); $$ = pow($1, $3); }
+
+    | MINUS EXP %prec UMINUS
+        { record_op('-'); $$ = -$2; }
+
+    | LPAREN EXP RPAREN
+        { $$ = $2; }
+    ;
+
+%%
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
+}
+
+int main(void) {
+    printf("Type 'quit' to exit\n> ");
+    yyparse();
+    return 0;
+}
+[24bcs042@mepcolinux ex5]$./calc
+Type 'quit' to exit
+> 7+8/2*5
+Parsed integer: 7
+Parsed integer: 8
+Parsed integer: 2
+Parsed operator: /
+Parsed integer: 5
+Parsed operator: *
+Parsed operator: +
+Result: 27.000000
+> 2^2^2
+Parsed integer: 2
+Parsed operator: ^
+Result: 16.000000
+> 4^2^3
+Parsed integer: 4
+Parsed integer: 2
+Parsed integer: 3
+Parsed operator: ^
+Result: 65536.000000
+> quit
+Goodbye!
+[24bcs042@mepcolinux ex5]$exit
+exit
+
+Script done on Thu Oct  8 10:52:54 2026
